@@ -7,7 +7,7 @@
 <meta name="description" content="Ember Bay: an open-world thief game. Steal smart, drive anything, play with friends.">
 <link rel="icon" href="img/icon.png">
 <meta property="og:title" content="Ember Bay">
-<meta property="og:description" content="An island of rich people and unlocked windows. Free for Windows.">
+<meta property="og:description" content="An island of rich people and unlocked windows. Free for Windows and Mac.">
 <meta property="og:image" content="img/docks.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -34,6 +34,7 @@ h1 .bay{display:block;color:transparent;-webkit-text-stroke:2px var(--ember);let
 .dl svg{width:26px;height:26px}
 .meta{margin-top:14px;color:var(--mute);font-size:14px}
 .meta b{color:var(--ink);font-weight:600}
+.alt{margin-top:8px;color:var(--mute);font-size:14px}.alt a{color:var(--ember);font-weight:600}
 .scroll{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);color:var(--mute);font-size:13px;letter-spacing:.2em;text-transform:uppercase;text-decoration:none}
 section{max-width:1160px;margin:0 auto;padding:96px 22px}
 .kicker{color:var(--ember);font:700 13px Barlow;letter-spacing:.25em;text-transform:uppercase;margin-bottom:10px}
@@ -81,6 +82,7 @@ footer{text-align:center;padding:36px 16px 48px;color:#6f675e;font-size:13.5px;b
       Download for Windows
     </a>
     <p class="meta" id="meta">Free · Windows 10 / 11 · updates itself</p>
+    <p class="alt">Also for <a class="altlink" href="https://github.com/marcrsfeir-commits/ember-bay-game/releases/latest/download/EmberBay-Mac.dmg">macOS</a></p>
   </div>
   <a class="scroll" href="#game">Scroll ↓</a>
 </header>
@@ -130,17 +132,28 @@ footer{text-align:center;padding:36px 16px 48px;color:#6f675e;font-size:13.5px;b
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m6 11 6 6 6-6"/><path d="M4 21h16"/></svg>
     Download for Windows
   </a>
-  <div class="reqs"><span>Windows 10 / 11 (64-bit)</span><span>Any GPU from the last ~8 years</span><span>~350 MB disk</span><span>Keyboard + mouse</span></div>
-  <p class="note">Windows may say <b>"Windows protected your PC"</b> the first time, because Ember Bay is an indie game without a paid code-signing certificate. Click <b>More info → Run anyway</b>. It installs to your user folder and adds a desktop shortcut.</p>
+  <p class="alt">Also for <a class="altlink" href="https://github.com/marcrsfeir-commits/ember-bay-game/releases/latest/download/EmberBay-Mac.dmg">macOS</a></p>
+  <div class="reqs"><span>Windows 10 / 11 (64-bit)</span><span>macOS 11+ (Apple Silicon or Intel)</span><span>Any GPU from the last ~8 years</span><span>~350 MB disk</span><span>Keyboard + mouse</span></div>
+  <p class="note"><b>Windows:</b> it may say <b>"Windows protected your PC"</b> the first time, because Ember Bay is an indie game without a paid code-signing certificate. Click <b>More info → Run anyway</b>. It installs to your user folder and adds a desktop shortcut.</p>
+  <p class="note"><b>Mac:</b> open the .dmg and drag Ember Bay into <b>Applications</b>. The first time you open it, macOS will say it can't check it for malware (indie game, no paid Apple certificate). Click <b>Done</b>, then go to <b>System Settings → Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b>. You only do this once; after that it opens normally and updates itself.</p>
 </section>
 
 <footer>© 2026 Marc · Ember Bay is an original game. All rights reserved.</footer>
 <div class="lb" id="lb"><img alt=""></div>
 <script>
+// Mac visitors get the Mac download as the main button (and Windows as the "also for" link)
+const REL = 'https://github.com/marcrsfeir-commits/ember-bay-game/releases/latest/download/';
+const isMac = /Mac/i.test((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent) && !/iPhone|iPad/i.test(navigator.userAgent);
+const ICON = document.getElementById('dl1').querySelector('svg').outerHTML;
+if (isMac) {
+  for (const id of ['dl1', 'dl2']) { const b = document.getElementById(id); b.href = REL + 'EmberBay-Mac.dmg'; b.innerHTML = ICON + ' Download for Mac'; }
+  document.querySelectorAll('.altlink').forEach(a => { a.href = REL + 'EmberBay-Setup.exe'; a.textContent = 'Windows'; });
+  document.getElementById('meta').textContent = 'Free · macOS 11+ · Apple Silicon or Intel · updates itself';
+}
 // latest version + size from the public releases (falls back to the plain text if offline / rate-limited)
 fetch('https://api.github.com/repos/marcrsfeir-commits/ember-bay-game/releases/latest').then(r => r.ok ? r.json() : null).then(j => {
-  if (!j) return; const a = (j.assets || []).find(x => /Setup\.exe$/.test(x.name)); if (!a) return;
-  document.getElementById('meta').innerHTML = `<b>Version ${j.tag_name.replace(/^v/, '')}</b> · ${Math.round(a.size / 1048576)} MB · Windows 10 / 11 · updates itself`;
+  if (!j) return; const a = (j.assets || []).find(x => (isMac ? /Mac\.dmg$/ : /Setup\.exe$/).test(x.name)); if (!a) return;
+  document.getElementById('meta').innerHTML = `<b>Version ${j.tag_name.replace(/^v/, '')}</b> · ${Math.round(a.size / 1048576)} MB · ${isMac ? 'macOS 11+ · Apple Silicon or Intel' : 'Windows 10 / 11'} · updates itself`;
 }).catch(() => {});
 const lb = document.getElementById('lb');
 document.querySelectorAll('.gallery figure').forEach(f => f.addEventListener('click', () => { lb.querySelector('img').src = f.querySelector('img').src; lb.classList.add('on'); }));
