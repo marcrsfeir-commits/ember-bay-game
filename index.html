@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ember Bay</title>
+<meta name="description" content="Ember Bay: an open-world thief game. Steal smart, drive anything, play with friends.">
+<link rel="icon" href="img/icon.png">
+<meta property="og:title" content="Ember Bay">
+<meta property="og:description" content="An island of rich people and unlocked windows. Free for Windows.">
+<meta property="og:image" content="img/title.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0a0e;--bg2:#141118;--ink:#efe9df;--mute:#a59d93;--ember:#ff8a30;--ember2:#ff5a1f;--line:rgba(255,255,255,.09);--glass:rgba(20,17,24,.62)}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font:400 17px/1.6 Barlow,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+.hero{position:relative;min-height:100vh;display:grid;place-items:center;text-align:center;padding:96px 16px 64px;isolation:isolate;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:-4%;background:url(img/title.jpg) center/cover;filter:saturate(1.1);transform:scale(1.04);animation:drift 30s ease-in-out infinite alternate;z-index:-2}
+.hero::after{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 50% 55%,rgba(11,10,14,.35),rgba(11,10,14,.92) 70%),linear-gradient(to bottom,rgba(11,10,14,.2),var(--bg) 96%);z-index:-1}
+@keyframes drift{to{transform:scale(1.12) translate(-1.5%,-1%)}}
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:14px 22px;z-index:10;background:linear-gradient(rgba(11,10,14,.85),rgba(11,10,14,0));}
+nav .brand{display:flex;gap:10px;align-items:center;font:900 20px "Big Shoulders Display";letter-spacing:.06em;text-decoration:none}
+nav .brand img{width:30px;height:30px;border-radius:7px}
+nav .links a{margin-left:20px;text-decoration:none;color:var(--mute);font-weight:600;font-size:15px}
+nav .links a:hover{color:var(--ink)}
+h1{font:900 clamp(72px,15vw,190px)/.82 "Big Shoulders Display";letter-spacing:.02em;text-transform:uppercase}
+h1 .bay{display:block;color:transparent;-webkit-text-stroke:2px var(--ember);letter-spacing:.32em;margin-left:.32em;text-shadow:0 0 40px rgba(255,138,48,.35)}
+.tag{margin:26px auto 36px;max-width:560px;font-size:clamp(17px,2.2vw,21px);color:#d8d0c4}
+.dl{display:inline-flex;align-items:center;gap:14px;padding:20px 38px 20px 30px;border-radius:14px;text-decoration:none;font:700 21px Barlow;color:#1a0d04;background:linear-gradient(180deg,#ffa257,var(--ember2));box-shadow:0 12px 40px rgba(255,90,31,.35),inset 0 1px 0 rgba(255,255,255,.4);transition:transform .15s,box-shadow .15s}
+.dl:hover{transform:translateY(-2px);box-shadow:0 18px 50px rgba(255,90,31,.5),inset 0 1px 0 rgba(255,255,255,.4)}
+.dl svg{width:26px;height:26px}
+.meta{margin-top:14px;color:var(--mute);font-size:14px}
+.meta b{color:var(--ink);font-weight:600}
+.scroll{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);color:var(--mute);font-size:13px;letter-spacing:.2em;text-transform:uppercase;text-decoration:none}
+section{max-width:1160px;margin:0 auto;padding:96px 22px}
+.kicker{color:var(--ember);font:700 13px Barlow;letter-spacing:.25em;text-transform:uppercase;margin-bottom:10px}
+h2{font:900 clamp(40px,6vw,64px)/1 "Big Shoulders Display";text-transform:uppercase;margin-bottom:18px}
+.lead{color:var(--mute);max-width:640px;margin-bottom:44px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:24px;transition:border-color .2s,transform .2s}
+.card:hover{border-color:rgba(255,138,48,.4);transform:translateY(-3px)}
+.card .ic{font-size:26px;margin-bottom:12px}
+.card h3{font:700 19px Barlow;margin-bottom:6px}
+.card p{color:var(--mute);font-size:15.5px}
+.gallery{display:grid;grid-template-columns:2fr 1fr;grid-auto-rows:240px;gap:14px}
+.gallery figure{position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);cursor:zoom-in}
+.gallery figure:first-child{grid-row:span 2}
+.gallery img{width:100%;height:100%;object-fit:cover;transition:transform .5s}
+.gallery figure:hover img{transform:scale(1.04)}
+.gallery figcaption{position:absolute;left:14px;bottom:12px;font:600 13px Barlow;letter-spacing:.12em;text-transform:uppercase;background:var(--glass);backdrop-filter:blur(8px);padding:6px 10px;border-radius:8px}
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.step{position:relative;padding:26px 24px 24px;border-radius:16px;background:linear-gradient(180deg,#1a1520,#141118);border:1px solid var(--line)}
+.step::before{counter-increment:s;content:counter(s);position:absolute;top:-16px;left:22px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:900 18px "Big Shoulders Display";background:var(--ember);color:#1a0d04}
+.step h3{font:700 18px Barlow;margin:6px 0 6px}.step p{color:var(--mute);font-size:15.5px}
+kbd{font:600 13px Barlow;background:#2a2430;border:1px solid #3a3340;border-bottom-width:3px;border-radius:6px;padding:1px 7px;color:var(--ink)}
+.cta{text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(255,90,31,.16),transparent 65%);border-top:1px solid var(--line)}
+.cta h2{margin-bottom:26px}
+.note{max-width:640px;margin:22px auto 0;color:var(--mute);font-size:14.5px}
+.reqs{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:20px}
+.reqs span{padding:6px 12px;border:1px solid var(--line);border-radius:999px;font-size:13.5px;color:var(--mute)}
+footer{text-align:center;padding:36px 16px 48px;color:#6f675e;font-size:13.5px;border-top:1px solid var(--line)}
+.lb{position:fixed;inset:0;background:rgba(5,4,7,.92);display:none;place-items:center;z-index:50;padding:20px;cursor:zoom-out}
+.lb.on{display:grid}.lb img{max-width:100%;max-height:92vh;border-radius:12px;box-shadow:0 20px 80px #000}
+.reveal{opacity:0;transform:translateY(18px);transition:opacity .7s,transform .7s}.reveal.in{opacity:1;transform:none}
+@media (max-width:760px){nav .links{display:none}.gallery{grid-template-columns:1fr;grid-auto-rows:200px}.gallery figure:first-child{grid-row:span 1}h1 .bay{-webkit-text-stroke-width:1.5px}.dl{padding:18px 26px;font-size:19px}}
+@media (prefers-reduced-motion:reduce){.hero::before{animation:none}.reveal{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+<nav><a class="brand" href="#"><img src="img/icon.png" alt="">EMBER BAY</a><div class="links"><a href="#game">The game</a><a href="#shots">Screenshots</a><a href="#friends">Play with friends</a><a href="#download">Download</a></div></nav>
+
+<header class="hero">
+  <div>
+    <h1>Ember<span class="bay">Bay</span></h1>
+    <p class="tag">An island of rich people and unlocked windows. Steal smart, sell to the fence, upgrade your tools and buy a better future.</p>
+    <a class="dl" id="dl1" href="https://github.com/marcrsfeir-commits/ember-bay-game/releases/latest/download/EmberBay-Setup.exe">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m6 11 6 6 6-6"/><path d="M4 21h16"/></svg>
+      Download for Windows
+    </a>
+    <p class="meta" id="meta">Free · Windows 10 / 11 · updates itself</p>
+  </div>
+  <a class="scroll" href="#game">Scroll ↓</a>
+</header>
+
+<section id="game" class="reveal">
+  <p class="kicker">The game</p>
+  <h2>Your city. Your score.</h2>
+  <p class="lead">Kit has $40, a tent under a bridge nobody finished, and very fast hands. Everything in Ember Bay is open: the shops, the cars, the apartments on the hill.</p>
+  <div class="grid">
+    <div class="card"><div class="ic">🕵️</div><h3>Steal smart</h3><p>Pickpocket, break into houses at night, crack safes and pull jewellery heists. Witnesses remember you.</p></div>
+    <div class="card"><div class="ic">🚗</div><h3>Drive anything</h3><p>Fifteen cars with their own engines, real damage, a cockpit view and a radio. Own them, tune them, call them over.</p></div>
+    <div class="card"><div class="ic">👥</div><h3>Play with friends</h3><p>Host a room, share a 6-letter code and up to five of you share the same city. Ride in each other's cars.</p></div>
+    <div class="card"><div class="ic">🏙️</div><h3>A living island</h3><p>Day and night, rain and storms, traffic, cops, shops with real people behind the counter and lights in every window.</p></div>
+    <div class="card"><div class="ic">🏠</div><h3>Build a life</h3><p>Buy apartments you can walk into, a garage for your cars, a wardrobe for your look, and a bed to sleep off the heat.</p></div>
+    <div class="card"><div class="ic">💾</div><h3>Your progress, kept</h3><p>Separate saves for solo and online, stored on your own PC. Runs offline; the internet is only for playing together.</p></div>
+  </div>
+</section>
+
+<section id="shots" class="reveal">
+  <p class="kicker">Screenshots</p>
+  <h2>Take a look around</h2>
+  <div class="gallery">
+    <figure><img src="img/docks.jpg" alt="Kit's camp under the bridge at sunset" loading="lazy"><figcaption>The camp</figcaption></figure>
+    <figure><img src="img/drive.jpg" alt="Driving through the suburbs" loading="lazy"><figcaption>The suburbs</figcaption></figure>
+    <figure><img src="img/rain.jpg" alt="Rainy night by the industrial yards" loading="lazy"><figcaption>Rain at night</figcaption></figure>
+    <figure><img src="img/night.jpg" alt="Downtown street at night" loading="lazy"><figcaption>After dark</figcaption></figure>
+    <figure><img src="img/downtown.jpg" alt="Downtown towers at dusk" loading="lazy"><figcaption>Downtown</figcaption></figure>
+  </div>
+</section>
+
+<section id="friends" class="reveal">
+  <p class="kicker">Play with friends</p>
+  <h2>Same city, same night</h2>
+  <p class="lead">No servers to set up, no ports to open. Everyone just needs the same version, and the game keeps itself up to date.</p>
+  <div class="steps">
+    <div class="step"><h3>Install Ember Bay</h3><p>Everyone downloads it from this page. It updates itself when there's a new version.</p></div>
+    <div class="step"><h3>One of you hosts</h3><p><b>Play with friends → Host</b>. You get a 6-letter room code. Copy it to your group chat.</p></div>
+    <div class="step"><h3>Everyone else joins</h3><p><b>Play with friends → Join</b>, type the code, and you appear next to the host.</p></div>
+    <div class="step"><h3>Find each other</h3><p>Friends show as green arrows on the map. Press <kbd>F</kbd> next to a friend's car to ride with them, <kbd>T</kbd> to chat.</p></div>
+  </div>
+</section>
+
+<section id="download" class="cta reveal">
+  <p class="kicker">Free download</p>
+  <h2>Hit the streets</h2>
+  <a class="dl" id="dl2" href="https://github.com/marcrsfeir-commits/ember-bay-game/releases/latest/download/EmberBay-Setup.exe">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m6 11 6 6 6-6"/><path d="M4 21h16"/></svg>
+    Download for Windows
+  </a>
+  <div class="reqs"><span>Windows 10 / 11 (64-bit)</span><span>Any GPU from the last ~8 years</span><span>~350 MB disk</span><span>Keyboard + mouse</span></div>
+  <p class="note">Windows may say <b>"Windows protected your PC"</b> the first time, because Ember Bay is an indie game without a paid code-signing certificate. Click <b>More info → Run anyway</b>. It installs to your user folder and adds a desktop shortcut.</p>
+</section>
+
+<footer>© 2026 Marc · Ember Bay is an original game. All rights reserved.</footer>
+<div class="lb" id="lb"><img alt=""></div>
+<script>
+// latest version + size from the public releases (falls back to the plain text if offline / rate-limited)
+fetch('https://api.github.com/repos/marcrsfeir-commits/ember-bay-game/releases/latest').then(r => r.ok ? r.json() : null).then(j => {
+  if (!j) return; const a = (j.assets || []).find(x => /Setup\.exe$/.test(x.name)); if (!a) return;
+  document.getElementById('meta').innerHTML = `<b>Version ${j.tag_name.replace(/^v/, '')}</b> · ${Math.round(a.size / 1048576)} MB · Windows 10 / 11 · updates itself`;
+}).catch(() => {});
+const lb = document.getElementById('lb');
+document.querySelectorAll('.gallery figure').forEach(f => f.addEventListener('click', () => { lb.querySelector('img').src = f.querySelector('img').src; lb.classList.add('on'); }));
+lb.addEventListener('click', () => lb.classList.remove('on'));
+addEventListener('keydown', e => { if (e.key === 'Escape') lb.classList.remove('on'); });
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
