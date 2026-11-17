@@ -1,0 +1,72 @@
+# Linux build of the Ember Bay desktop app. Build inputs (app sources + game payload) sit on a private draft release
+# "build-<version>" in this repo; the finished build is attached back to that draft and then copied to the public release.
+name: linux-build
+on:
+  push:
+    branches: [build-ci]
+  workflow_dispatch:
+    inputs:
+      version: { description: 'app version (default: app/package.json)', required: false }
+permissions:
+  contents: write
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Version
+        id: v
+        run: |
+          V="${{ github.event.inputs.version }}"
+          [ -z "$V" ] && V=$(cat VERSION)
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "building $V"
+      - name: Game payload
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          gh release download "build-${{ steps.v.outputs.version }}" -R "${{ github.repository }}" -p payload.zip -p app-src.zip -D "$RUNNER_TEMP"
+          mkdir -p app && unzip -q "$RUNNER_TEMP/app-src.zip" -d app
+          test -f app/package.json && grep "\"version\"" app/package.json
+          mkdir -p app/game && unzip -q "$RUNNER_TEMP/payload.zip" -d app/game
+          test -f app/game/index.html
+          du -sh app/game app/game/music app/game/assets
+      - name: Install
+        working-directory: app
+        run: npm ci
+      - name: Build AppImage
+        working-directory: app
+        run: npx electron-builder --linux AppImage --x64 --publish never
+      - name: Check
+        working-directory: app/release
+        run: |
+          ls -la
+          cat latest-linux.yml
+          grep -q "version: ${{ steps.v.outputs.version }}" latest-linux.yml
+      - name: Smoke test (headless, muted)
+        working-directory: app/release
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq xvfb > /dev/null
+          chmod +x EmberBay-Linux.AppImage
+          rm -f /tmp/emberbay-smoke.json /tmp/emberbay-smoke.png
+          # --appimage-extract-and-run: no FUSE needed on the runner (players with libfuse2 just double-click it)
+          # GitHub runners have no GPU: WebGL runs in software, so this is slow; the smoke writes its progress at every step
+          timeout 1500 xvfb-run -a -s "-screen 0 1600x900x24" ./EmberBay-Linux.AppImage --appimage-extract-and-run --smoke --hidden || echo "exit $?"
+          cp /tmp/emberbay-smoke.json linux-smoke.json
+          [ -f /tmp/emberbay-smoke.png ] && cp /tmp/emberbay-smoke.png linux-smoke.png || true
+          [ -f /tmp/emberbay-smoke-menu.png ] && cp /tmp/emberbay-smoke-menu.png linux-smoke-menu.png || true
+          cat linux-smoke.json | head -c 3000; echo
+          node -e "const r=require('./linux-smoke.json'); const miss=(r.assets&&r.assets.missing)||[]; console.log('stage',r.stage,'loaded',r.loaded,'inGame',r.inGame,'music',r.music,'version',r.version,'missing',miss.length,'errors',(r.errors||[]).length); if(!r.loaded||!r.page||!r.page.canvas||!r.page.play||miss.length) process.exit(1)"
+      - name: Attach to payload release
+        if: always()
+        working-directory: app/release
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          F="EmberBay-Linux.AppImage latest-linux.yml linux-smoke.json"
+          [ -f linux-smoke.png ] && F="$F linux-smoke.png"
+          [ -f linux-smoke-menu.png ] && F="$F linux-smoke-menu.png"
+          [ -f linux-smoke.json ] || F=$(echo $F | sed "s/ linux-smoke.json//")
+          for b in *.blockmap; do [ -f "$b" ] && F="$F $b"; done
+          gh release upload "build-${{ steps.v.outputs.version }}" -R "${{ github.repository }}" $F --clobber

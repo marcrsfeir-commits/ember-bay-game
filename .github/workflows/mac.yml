@@ -1,0 +1,67 @@
+# Mac build of the Ember Bay desktop app. Build inputs (app sources + game payload) sit on a private draft release
+# "build-<version>" in this repo; the finished build is attached back to that draft and then copied to the public release.
+name: mac-build
+on:
+  push:
+    branches: [build-ci]
+  workflow_dispatch:
+    inputs:
+      version: { description: 'app version (default: app/package.json)', required: false }
+permissions:
+  contents: write # attaches the build to the build-<version> draft
+jobs:
+  mac:
+    runs-on: macos-15-intel  # arm64 runners kept queueing for 15+ min (capacity); Intel builds universal fine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Version
+        id: v
+        run: |
+          V="${{ github.event.inputs.version }}"
+          [ -z "$V" ] && V=$(cat VERSION)
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "building $V"
+      - name: Game payload
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          gh release download "build-${{ steps.v.outputs.version }}" -R "${{ github.repository }}" -p payload.zip -p app-src.zip -D "$RUNNER_TEMP"
+          mkdir -p app && ditto -x -k "$RUNNER_TEMP/app-src.zip" app
+          test -f app/package.json && grep "\"version\"" app/package.json
+          mkdir -p app/game && ditto -x -k "$RUNNER_TEMP/payload.zip" app/game
+          ls -la app/game app/game/music | head -20
+          test -f app/game/index.html
+          test -f app/game/assets/basis/basis_transcoder.wasm && du -sh app/game/assets || echo "no asset folder in this payload (pre-realism build)"
+      - name: Install
+        working-directory: app
+        run: npm ci
+      - name: Build (universal, ad-hoc signed)
+        working-directory: app
+        env: { CSC_IDENTITY_AUTO_DISCOVERY: 'false' }
+        run: npx electron-builder --mac --universal --publish never
+      - name: Check
+        working-directory: app/release
+        run: |
+          ls -la
+          codesign -dv --verbose=2 "mac-universal/Ember Bay.app" 2>&1 | head -12
+          codesign --verify --deep --strict --verbose=2 "mac-universal/Ember Bay.app"
+          # the zip players download must unpack to a sealed app too (this is what the self-updater installs)
+          mkdir -p "$RUNNER_TEMP/z" && ditto -x -k EmberBay-Mac.zip "$RUNNER_TEMP/z" && codesign --verify --deep --strict "$RUNNER_TEMP/z/Ember Bay.app" && echo "zip app sealed OK"
+          spctl -a -vv -t exec "mac-universal/Ember Bay.app" || true
+          lipo -archs "mac-universal/Ember Bay.app/Contents/MacOS/Ember Bay"
+          cat latest-mac.yml
+      - name: Smoke test (launch the packaged app, hidden + muted)
+        working-directory: app/release
+        run: |
+          rm -f "$TMPDIR/emberbay-smoke.json"
+          # [AC] proves the fuses (asar integrity on the universal binary) + ad-hoc signature still let the real app start
+          # macOS has no timeout(1): perl alarm does the same
+          perl -e 'alarm shift; exec @ARGV' 1500 "mac-universal/Ember Bay.app/Contents/MacOS/Ember Bay" --smoke --hidden || echo "exit $?"
+          J="$(node -p "require('os').tmpdir()")/emberbay-smoke.json"; cp "$J" mac-smoke.json
+          head -c 2000 mac-smoke.json; echo
+          node -e "const r=require('./mac-smoke.json'); console.log('stage',r.stage,'inGame',r.inGame,'version',r.version); if(!r.loaded||!r.page||!r.page.canvas||!r.page.play) process.exit(1)"
+      - name: Attach to payload release
+        working-directory: app/release
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: gh release upload "build-${{ steps.v.outputs.version }}" -R "${{ github.repository }}" EmberBay-Mac.dmg EmberBay-Mac.zip EmberBay-Mac.dmg.blockmap EmberBay-Mac.zip.blockmap latest-mac.yml mac-smoke.json --clobber
